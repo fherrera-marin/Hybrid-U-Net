@@ -1,13 +1,4 @@
 import numpy as np
-import tensorflow as tf
-
-from src.models.unet_hybrid import unet_model_multi_output
-
-
-def load_model(weights_path, input_shape=(80, 200, 1)):
-    model = unet_model_multi_output(input_shape=input_shape)
-    model.load_weights(weights_path)
-    return model
 
 
 def predict_fields(model, sdf_norm, norm_params):

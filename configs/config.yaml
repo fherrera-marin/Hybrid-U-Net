@@ -15,8 +15,8 @@ evaluation:
   nearwall_cells: 2   # Umbral = nearwall_cells × resolución espacial del grid (mín. SDF no nulo)
 
 paths:
-  dataset:       "data/raw/CNN_df.pkl"
+  dataset:       "data/CNN_df.pkl"
   saved_model:   "saved_models/best_model_256x512.weights.h5"
   split_indices: "saved_models/split_indices_256x512.npz"
   norm_params:   "saved_models/norm_params_256x512.npz"
-  results_dir:   "data/raw"
+  results_dir:   "data/results"
