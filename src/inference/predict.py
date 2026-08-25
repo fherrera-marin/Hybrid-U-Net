@@ -3,19 +3,19 @@ import numpy as np
 
 def predict_fields(model, sdf_norm, norm_params):
     """
-    Realiza la predicción y desnormaliza los campos.
+    Runs the prediction and denormalizes the output fields.
 
     Args:
-        model      : modelo Keras cargado
-        sdf_norm   : array (80, 200) SDF normalizado
-        norm_params: dict con min/max de cada campo
+        model      : loaded Keras model
+        sdf_norm   : array (H, W), normalized SDF
+        norm_params: dict with min/max per field
                      {"Ux": (min, max), "Uy": (min, max), "P": (min, max)}
 
     Returns:
-        dict con campos desnormalizados: {"Ux", "Uy", "P"}
-        y el SDF invertido para visualización
+        dict with denormalized fields: {"Ux", "Uy", "P"}
+        and the flipped SDF for visualization
     """
-    sdf_2d    = np.squeeze(sdf_norm)              # (80, 200) independiente del shape de entrada
+    sdf_2d    = np.squeeze(sdf_norm)              # (H, W), independent of the input shape
     sdf_input = sdf_2d.reshape(1, *sdf_2d.shape, 1)
     ux_pred, uy_pred, p_pred = model.predict(sdf_input, verbose=0)
 
@@ -28,7 +28,7 @@ def predict_fields(model, sdf_norm, norm_params):
     uy_field = np.flipud(np.squeeze(denorm(uy_pred[0], "Uy")))
     p_field  = np.flipud(np.squeeze(denorm(p_pred[0],  "P")))
 
-    # Imponer condición de contorno: velocidad y presión = 0 dentro del perfil
+    # Enforce boundary condition: velocity and pressure = 0 inside the airfoil
     mask = sdf_vis == 0
     ux_field[mask] = 0
     uy_field[mask] = 0

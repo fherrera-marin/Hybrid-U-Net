@@ -75,11 +75,11 @@ def plot_comparison(pred, true, field_name, unit, mask=None,
 
 def plot_sdf(sdf, case_label=""):
     """
-    Visualiza el campo SDF de un caso.
+    Visualizes the SDF field of a case.
 
     Args:
-        sdf        : array 2D del SDF normalizado (0 = interior airfoil)
-        case_label : texto para el título (e.g. 'case 007')
+        sdf        : 2D array of the normalized SDF (0 = airfoil interior)
+        case_label : text for the title (e.g. 'case 007')
     """
     cmap = plt.cm.plasma.copy()
     cmap.set_bad('white')
@@ -97,11 +97,11 @@ def plot_sdf(sdf, case_label=""):
 
 def plot_predictions(fields, titles=None):
     """
-    Muestra los tres campos predichos (Ux, Uy, P) en una sola figura.
+    Shows the three predicted fields (Ux, Uy, P) in a single figure.
 
     Args:
         fields : dict {"Ux": array, "Uy": array, "P": array}
-        titles : dict opcional con títulos personalizados
+        titles : optional dict with custom titles
     """
     default_titles = {
         "Ux": ("Hybrid U-Net X-Velocity", "m/s"),
@@ -122,7 +122,7 @@ def plot_predictions(fields, titles=None):
 
 
 def plot_training_history(history):
-    """Grafica la curva de pérdida de entrenamiento y validación."""
+    """Plots the training and validation loss curve."""
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(history["loss"],     label="Train loss")
     ax.plot(history["val_loss"], label="Val loss")

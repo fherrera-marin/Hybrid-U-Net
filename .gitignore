@@ -1,4 +1,4 @@
-# Entorno virtual
+# Virtual environment
 venv/
 
 # Python
@@ -6,15 +6,15 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Datos y modelos (archivos grandes)
+# Data and models (large files)
 data/results/
 saved_models/*.h5
 saved_models/*.weights.h5
 saved_models/*.npz
 
-# Jupyter (si se añaden notebooks en el futuro)
+# Jupyter (in case notebooks are added in the future)
 .ipynb_checkpoints/
 
-# Sistema
+# System
 .DS_Store
 Thumbs.db

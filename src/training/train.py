@@ -1,6 +1,6 @@
 import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ["TF_CPP_MIN_LOG_LEVEL"]  = "2"   # Silencia logs INFO y WARNING de TF
+os.environ["TF_CPP_MIN_LOG_LEVEL"]  = "2"   # Silence TF INFO and WARNING logs
 
 import time
 import numpy as np
@@ -22,39 +22,39 @@ def train(config_path="configs/config.yaml"):
     train_cfg = cfg["training"]
     paths_cfg = cfg["paths"]
 
-    # ---- Cargar datos ----
+    # ---- Load data ----
     import pandas as pd
     from sklearn.model_selection import train_test_split
 
     df = pd.read_pickle(paths_cfg["dataset"])
     sdf_array = np.array(df["SDF"].tolist())
-    sdf_array = np.maximum(sdf_array, 0)   # SDF < 0 (interior airfoil) → 0 exacto
+    sdf_array = np.maximum(sdf_array, 0)   # SDF < 0 (airfoil interior) -> exact 0
     ux_array  = np.array(df["Ux_discretized"].tolist())
     uy_array  = np.array(df["Uy_discretized"].tolist())
     p_array   = np.array(df["P_discretized"].tolist())
 
-    # Split 3-vías usando índices — ANTES de normalizar para evitar leakage
+    # 3-way split using indices — BEFORE normalizing, to avoid leakage
     rs       = train_cfg["random_state"]
     ts_test  = train_cfg["test_size"]
     ts_val   = train_cfg["val_size"]
-    val_frac = ts_val / (1.0 - ts_test)   # fracción de val relativa al conjunto trainval
+    val_frac = ts_val / (1.0 - ts_test)   # val fraction relative to the trainval set
 
     idx = np.arange(len(sdf_array))
 
-    # 1. Separar test hold-out (nunca usado durante el entrenamiento)
+    # 1. Split off the test hold-out (never used during training)
     idx_trainval, idx_test = train_test_split(idx, test_size=ts_test, random_state=rs, shuffle=True)
 
-    # 2. Separar validación del resto (trainval → train + val)
+    # 2. Split validation from the rest (trainval -> train + val)
     idx_train, idx_val = train_test_split(idx_trainval, test_size=val_frac, random_state=rs, shuffle=True)
 
     print(f"Split: {len(idx_train)} train / {len(idx_val)} val / {len(idx_test)} test hold-out")
 
-    # Persistir índices para reproducibilidad exacta en evaluate.py
+    # Persist indices for exact reproducibility in evaluate.py
     save_path_split = Path(paths_cfg["split_indices"])
     save_path_split.parent.mkdir(parents=True, exist_ok=True)
     np.savez(save_path_split, idx_train=idx_train, idx_val=idx_val, idx_test=idx_test)
 
-    # Normalización: fit solo sobre entrenamiento → sin leakage de val/test
+    # Normalization: fit only on the training set -> no val/test leakage
     def fit_norm(arr, idx):
         mn, mx = arr[idx].min(), arr[idx].max()
         return mn, mx
@@ -67,7 +67,7 @@ def train(config_path="configs/config.yaml"):
     uy_mn,  uy_mx  = fit_norm(uy_array,  idx_train)
     p_mn,   p_mx   = fit_norm(p_array,   idx_train)
 
-    # Persistir parámetros de normalización para evaluate.py y predict.py
+    # Persist normalization parameters for evaluate.py and predict.py
     np.savez(paths_cfg["norm_params"],
              sdf_mn=sdf_mn, sdf_mx=sdf_mx,
              ux_mn=ux_mn,   ux_mx=ux_mx,
@@ -79,7 +79,7 @@ def train(config_path="configs/config.yaml"):
     uy_norm  = apply_norm(uy_array,  uy_mn,  uy_mx)
     p_norm   = apply_norm(p_array,   p_mn,   p_mx)
 
-    # Aplicar índices a todos los arrays de una vez
+    # Apply indices to all arrays at once
     X_train  = sdf_norm[idx_train];  X_val  = sdf_norm[idx_val]
     ux_train = ux_norm[idx_train];   ux_val = ux_norm[idx_val]
     uy_train = uy_norm[idx_train];   uy_val = uy_norm[idx_val]
@@ -94,7 +94,7 @@ def train(config_path="configs/config.yaml"):
     p_train  = np.expand_dims(p_train,  -1).astype(np.float32)
     p_val    = np.expand_dims(p_val,    -1).astype(np.float32)
 
-    # ---- Modelo ----
+    # ---- Model ----
     model = unet_model_multi_output(input_shape=tuple(cfg["model"]["input_shape"]))
     optimizer = tf.keras.optimizers.Adam(learning_rate=train_cfg["learning_rate"])
 
@@ -107,17 +107,17 @@ def train(config_path="configs/config.yaml"):
     )
     val_ds = tf.data.Dataset.from_tensor_slices((X_val, ux_val, uy_val, p_val)).batch(batch_size)
 
-    # ---- Bucle de entrenamiento ----
+    # ---- Training loop ----
     alpha   = train_cfg["loss_alpha"]
     patience = train_cfg["patience"]
     best_val = float("inf")
     wait = 0
     history = {"loss": [], "val_loss": []}
     save_path = Path(paths_cfg["saved_model"])
-    t_inicio = time.time()
+    t_start = time.time()
 
     for epoch in range(train_cfg["epochs"]):
-        # Entrenamiento
+        # Training
         train_losses = []
         for x_b, ux_b, uy_b, p_b in train_ds:
             w = compute_sdf_weights(x_b, alpha=alpha)
@@ -130,7 +130,7 @@ def train(config_path="configs/config.yaml"):
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
             train_losses.append(loss.numpy())
 
-        # Validación
+        # Validation
         val_losses = []
         for x_b, ux_b, uy_b, p_b in val_ds:
             w = compute_sdf_weights(x_b, alpha=alpha)
@@ -157,13 +157,13 @@ def train(config_path="configs/config.yaml"):
         else:
             wait += 1
             if wait >= patience:
-                print(f"\nEarly stopping en epoch {epoch + 1}")
+                print(f"\nEarly stopping at epoch {epoch + 1}")
                 break
 
-    t_total = time.time() - t_inicio
+    t_total = time.time() - t_start
     model.load_weights(str(save_path))
-    print(f"\nMejor val_loss: {best_val:.5f}")
-    print(f"Tiempo total entrenamiento: {t_total:.1f} s  ({t_total/60:.1f} min)")
+    print(f"\nBest val_loss: {best_val:.5f}")
+    print(f"Total training time: {t_total:.1f} s  ({t_total/60:.1f} min)")
     return model, history
 
 

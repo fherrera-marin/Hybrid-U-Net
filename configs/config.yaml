@@ -1,18 +1,18 @@
 model:
-  input_shape: [256, 512, 1]   # (H, W, canales) — grid 256×512
+  input_shape: [256, 512, 1]   # (H, W, channels) — 256x512 grid
 
 training:
   epochs: 1000
-  batch_size: 4              # reducido respecto al grid 80×200 por mayor resolución
+  batch_size: 4              # reduced vs. the 80x200 grid due to higher resolution
   learning_rate: 0.001
-  val_size:  0.15   # fracción de validación (early stopping) — sobre el total del dataset
-  test_size: 0.15   # fracción de test hold-out — nunca visto durante el entrenamiento
+  val_size:  0.15   # validation fraction (early stopping) — over the full dataset
+  test_size: 0.15   # test hold-out fraction — never seen during training
   random_state: 42
   patience: 10               # EarlyStopping
-  loss_alpha: 3.0            # Peso near-wall: mayor → más concentrado en pared
+  loss_alpha: 3.0            # Near-wall weight: higher -> more concentrated at the wall
 
 evaluation:
-  nearwall_cells: 2   # Umbral = nearwall_cells × resolución espacial del grid (mín. SDF no nulo)
+  nearwall_cells: 2   # Threshold = nearwall_cells x grid spatial resolution (min. non-zero SDF)
 
 paths:
   dataset:       "data/CNN_df.pkl"

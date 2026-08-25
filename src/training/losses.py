@@ -2,29 +2,29 @@ import tensorflow as tf
 
 
 def weighted_mse(y_true, y_pred, weights):
-    """MSE ponderado píxel a píxel por un mapa de pesos."""
+    """Pixel-wise MSE weighted by a weight map."""
     return tf.reduce_mean(weights * tf.square(y_true - y_pred))
 
 
 def weighted_mae(y_true, y_pred, weights):
-    """MAE ponderado píxel a píxel por un mapa de pesos."""
+    """Pixel-wise MAE weighted by a weight map."""
     return tf.reduce_mean(weights * tf.abs(y_true - y_pred))
 
 
 def compute_sdf_weights(sdf_batch, alpha=3.0, epsilon=1e-6):
     """
-    Calcula el mapa de pesos a partir del campo SDF normalizado.
+    Computes the weight map from the normalized SDF field.
 
-    Las zonas near-wall (SDF ≈ 0⁺) reciben peso alto.
-    El interior del perfil (SDF = 0) queda enmascarado.
+    Near-wall regions (SDF ~ 0+) get a high weight.
+    The airfoil interior (SDF = 0) is masked out.
 
     Args:
-        sdf_batch : tensor (batch, H, W, 1), SDF normalizado en [0, 1]
-        alpha     : controla la caída del peso con la distancia (1–10)
-        epsilon   : estabilidad numérica
+        sdf_batch : tensor (batch, H, W, 1), SDF normalized to [0, 1]
+        alpha     : controls how fast the weight decays with distance (1-10)
+        epsilon   : numerical stability
 
     Returns:
-        weights   : tensor de misma forma que sdf_batch
+        weights   : tensor with the same shape as sdf_batch
     """
     alpha   = tf.cast(alpha,   sdf_batch.dtype)
     epsilon = tf.cast(epsilon, sdf_batch.dtype)

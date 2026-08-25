@@ -8,24 +8,24 @@ from keras.layers import (
 
 def unet_model_multi_output(input_shape=(256, 512, 1)):
     """
-    Hybrid CNN + U-Net con tres salidas independientes.
+    Hybrid CNN + U-Net with three independent outputs.
 
-    Entrada:
-        sdf: campo Signed Distance Function normalizado. H=256, W=512.
-             H×W debe ser divisible por 8 (3 MaxPooling2D de stride 2).
+    Input:
+        sdf: normalized Signed Distance Function field. H=256, W=512.
+             H and W must be divisible by 8 (3 stride-2 MaxPooling2D layers).
 
-    Salidas:
-        output_1: campo de velocidad Ux
-        output_2: campo de velocidad Uy
-        output_3: campo de presión P
+    Outputs:
+        output_1: Ux velocity field
+        output_2: Uy velocity field
+        output_3: P pressure field
     """
     H, W = input_shape[0], input_shape[1]
-    # Tras 3 × MaxPool(2,2) el mapa de activaciones tiene tamaño H//8 × W//8
+    # After 3 x MaxPool(2,2) the activation map has size H//8 x W//8
     H_bn, W_bn = H // 8, W // 8
 
     inputs = Input(shape=input_shape)
 
-    # ---- Encoder (compartido) ----
+    # ---- Encoder (shared) ----
     c1 = Conv2D(16, (3, 3), activation='relu', padding='same')(inputs)
     c1 = Conv2D(16, (3, 3), activation='relu', padding='same')(c1)
     p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
@@ -38,11 +38,11 @@ def unet_model_multi_output(input_shape=(256, 512, 1)):
     c3 = Conv2D(64, (3, 3), activation='relu', padding='same')(c3)
     p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
 
-    # ---- Bottleneck + transición CNN → U-Net ----
+    # ---- Bottleneck + CNN -> U-Net transition ----
     b = Conv2D(128, (3, 3), activation='relu', padding='same')(p3)
     b = Conv2D(128, (3, 3), activation='relu', padding='same')(b)
-    # GlobalAveragePooling comprime el mapa espacial a 128 valores (evita OOM
-    # que causaba Flatten en grids grandes como 256×512)
+    # GlobalAveragePooling compresses the spatial map to 128 values (avoids the
+    # OOM that Flatten caused on large grids such as 256x512)
     gap = GlobalAveragePooling2D()(b)
     dense = Dense(H_bn * W_bn * 32, activation='relu')(gap)
     reshaped = Reshape((H_bn, W_bn, 32))(dense)
@@ -95,7 +95,7 @@ def unet_model_multi_output(input_shape=(256, 512, 1)):
     cp6 = Conv2D(16, (3, 3), activation='relu', padding='same')(up1)
     cp6 = Conv2D(16, (3, 3), activation='relu', padding='same')(cp6)
 
-    # ---- Salidas ----
+    # ---- Outputs ----
     output_ux = Conv2D(1, (1, 1), activation='linear', padding='same', name='output_1')(cx6)
     output_uy = Conv2D(1, (1, 1), activation='linear', padding='same', name='output_2')(cy6)
     output_p  = Conv2D(1, (1, 1), activation='linear', padding='same', name='output_3')(cp6)
