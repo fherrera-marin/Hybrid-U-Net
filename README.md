@@ -28,8 +28,9 @@ order to go from the dataset to predicting a specific SDF supplied by the user:
 
 ### 1. Make sure the dataset is in place
 
-`data/CNN_df.pkl` must exist (tracked via Git LFS). Nothing else is required — no preprocessing
-step runs in this repo.
+`data/CNN_df.pkl` (the full dataset) must exist locally — see [Input data](#input-data) below for
+why it isn't tracked in this repository. Nothing else is required — no preprocessing step runs
+here.
 
 ### 2. Train the model
 
@@ -131,6 +132,12 @@ Grid: 256×512 (height × width), divisible by 8 (required by the 3 `MaxPooling2
 encoder). Cells inside the airfoil (`SDF < 0`) are clamped to 0 in `SDF`, `Ux`, `Uy` and `P`
 before training.
 
+**Note on the dataset file**: the full `data/CNN_df.pkl` (200 simulations, ~840 MB) is **not**
+tracked in this repository — it must be provided locally, at that same path, before running
+`train.py` or `evaluate.py`. Instead, [`data/CNN_df_sample.pkl`](data/CNN_df_sample.pkl) ships in
+the repo: the same 4 columns and format, reduced to the first 20 rows (~84 MB), meant as a
+lightweight reference for the expected structure — not for real training or evaluation.
+
 ## Model architecture
 
 [`unet_model_multi_output()`](src/models/unet_hybrid.py) — a single shared CNN encoder feeding
@@ -166,7 +173,8 @@ venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 ```
 
-Requires `data/CNN_df.pkl` to be present in the repo (tracked via Git LFS).
+Requires the full `data/CNN_df.pkl` to be placed locally at that path (see
+[Input data](#input-data) — it is not tracked in this repo, only a 20-row sample is).
 
 ## Configuration (`configs/config.yaml`)
 

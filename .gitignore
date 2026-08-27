@@ -7,6 +7,7 @@ __pycache__/
 *.pyo
 
 # Data and models (large files)
+data/CNN_df.pkl
 data/results/
 saved_models/*.h5
 saved_models/*.weights.h5
